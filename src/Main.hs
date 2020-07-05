@@ -9,10 +9,6 @@ import System.Directory
 import System.Exit
 import Control.Monad
 
-
-main :: IO ()
-main = generateSite
-
 header :: FilePath
 header = "source/header.html"
 
@@ -34,6 +30,17 @@ replaceHtmlWithMd = unpack . replace "md" "html" . pack
 appendRootPath :: FilePath -> FilePath -> FilePath
 appendRootPath src dest = src <> "/" <> dest
 
+main :: IO ()
+main = generateSite
+
+convertTextToNode :: String -> Node
+convertTextToNode inp = commonmarkToNode [] $ pack inp
+
+convertNodeToHtml :: Node -> String
+convertNodeToHtml inp = unpack $ nodeToHtml [] inp
+
+convertMdtoHtml :: String -> String
+convertMdtoHtml = convertNodeToHtml . convertTextToNode
 
 generateSite :: IO ()
 generateSite = do
@@ -49,14 +56,6 @@ generateSite = do
     let pageWithData = zip (map ((destination `appendRootPath`) . replaceHtmlWithMd) pagesPath) completePagesContent
     doesDestinationExist <- doesDirectoryExist destination
     unless doesDestinationExist $ createDirectory destination
-    mapM_ (uncurry writeFile) $ pageWithData
+    mapM_ (uncurry writeFile) pageWithData
 
 
-convertTextToNode :: String -> Node
-convertTextToNode inp = commonmarkToNode [] $ pack inp
-
-convertNodeToHtml :: Node -> String
-convertNodeToHtml inp = unpack $ nodeToHtml [] inp
-
-convertMdtoHtml :: String -> String
-convertMdtoHtml = convertNodeToHtml . convertTextToNode
